@@ -109,6 +109,9 @@ const Dashboard = () => {
         <div className="glass hero-card">
           <div className="hero-top">
             <div className="kicker">ZEST 2K26 · SRMS CET</div>
+            <div className="festival-note">
+              <span>01</span> The campus is your stage
+            </div>
           </div>
 
           <h1>

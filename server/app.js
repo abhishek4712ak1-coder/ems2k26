@@ -29,10 +29,35 @@ app.use(
   })
 );
 
+const allowedOrigins = new Set(
+  [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    process.env.CLIENT_ORIGIN,
+  ].filter(Boolean)
+);
+
+const isAllowedOrigin = (origin) =>
+  !origin ||
+  allowedOrigins.has(origin) ||
+  /^https:\/\/[a-z0-9-]+-5173\.app\.github\.dev$/i.test(origin);
+
 const corsOptions = {
-    origin:"http://localhost:5173",
-    credentials:true
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
+    }
+
+    console.log("CORS blocked origin:", origin);
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,7 +75,7 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
-app.use(cors(corsOptions));
+
 
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));

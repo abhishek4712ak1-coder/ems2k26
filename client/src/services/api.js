@@ -1,8 +1,4 @@
-const API_URL = String(import.meta.env.VITE_API_URL || "/api")
-  .trim()
-  .replace(/^["']|["']$/g, "")
-  .replace(/\/$/, "");
-
+const API_URL = "https://bug-free-eureka-p7pjjqqjrj4gc6xxp-1800.app.github.dev/api"
 const parseJsonSafe = async (response) => {
   try {
     return await response.json();

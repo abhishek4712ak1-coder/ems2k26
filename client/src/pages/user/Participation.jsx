@@ -98,6 +98,14 @@ const Participation = () => {
 
   const memberLimit = Number(selectedEvent?.limit) || 0;
 
+  const joinedIndividualEvents = useMemo(
+    () =>
+      selected.map((name) =>
+        individualCatalog.find((item) => eventName(item) === name)
+      ),
+    [individualCatalog, selected]
+  );
+
   const toggleEvent = (name, halted) => {
     if (halted) {
       return;
@@ -289,27 +297,91 @@ const Participation = () => {
       {success ? <div className="alert ok">{success}</div> : null}
       {error ? <div className="alert err">{error}</div> : null}
 
+      <section className="glass panel participation-overview">
+        <div className="section-title">
+          <div>
+            <div className="kicker">Your registrations</div>
+            <h2>Participation overview</h2>
+            <p>Events and teams already linked to your participant ID.</p>
+          </div>
+          <span className="badge ok">
+            {selected.length + myTeams.length} total registration
+            {selected.length + myTeams.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        <div className="participation-overview-grid">
+          <div className="participation-list">
+            <div className="participation-list-heading">
+              <span className="badge cyan">Individual</span>
+              <strong>{selected.length} event{selected.length === 1 ? "" : "s"}</strong>
+            </div>
+            {selected.length === 0 ? (
+              <p className="empty-inline">No individual events selected yet.</p>
+            ) : (
+              joinedIndividualEvents.map((item, index) => {
+                const name = selected[index];
+                return (
+                  <div className="participation-item" key={name}>
+                    <div>
+                      <strong>{name}</strong>
+                      <small>
+                        {item?.venue || "Venue TBA"} · {item?.time || "Schedule TBA"}
+                      </small>
+                    </div>
+                    <span className="badge ok">Registered</span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="participation-list">
+            <div className="participation-list-heading">
+              <span className="badge pink">Team</span>
+              <strong>{myTeams.length} team{myTeams.length === 1 ? "" : "s"}</strong>
+            </div>
+            {myTeams.length === 0 ? (
+              <p className="empty-inline">No confirmed team events yet.</p>
+            ) : (
+              myTeams.map((team) => (
+                <div className="participation-item" key={team.tid}>
+                  <div>
+                    <strong>{team.event}</strong>
+                    <small>{team.name} · Team ID: {team.tid}</small>
+                  </div>
+                  <span className="badge ok">Confirmed</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+
       <div className="tab-bar" role="tablist">
         <button
           type="button"
           className={tab === "individual" ? "active" : ""}
           onClick={() => setTab("individual")}
+          aria-selected={tab === "individual"}
         >
-          Individual
+          Individual ({individualCatalog.length})
         </button>
         <button
           type="button"
           className={tab === "team" ? "active" : ""}
           onClick={() => setTab("team")}
+          aria-selected={tab === "team"}
         >
-          Team
+          Team ({teamCatalog.length})
         </button>
         <button
           type="button"
           className={tab === "mine" ? "active" : ""}
           onClick={() => setTab("mine")}
+          aria-selected={tab === "mine"}
         >
-          My teams
+          My teams ({myTeams.length})
         </button>
       </div>
 

@@ -37,6 +37,14 @@ const Navbar = () => {
           </div>
         </NavLink>
 
+        <div className="festival-tag" aria-label="Campus cultural festival">
+          <span>✦</span>
+          <div>
+            <strong>Campus cultural fest</strong>
+            <small>Tradition meets tomorrow</small>
+          </div>
+        </div>
+
         <nav className="nav-tabs" aria-label="Main">
           {tabs.map((tab) => (
             <NavLink
@@ -58,7 +66,8 @@ const Navbar = () => {
         <button
           className="menu-toggle"
           type="button"
-          aria-label="Open menu"
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
           onClick={() => setOpen((value) => !value)}
         >
           {open ? "✕" : "☰"}

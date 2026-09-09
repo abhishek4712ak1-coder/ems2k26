@@ -29,7 +29,7 @@ const Login = () => {
     try {
       setLoading(true);
       const response = await login(email.trim().toLowerCase(), password);
-      navigate(from, {
+      navigate("/dashboard", {
         replace: true,
         state: {
           successMessage: response.message || "Login successful. Welcome back!",
