@@ -65,6 +65,7 @@ app.options(/.*/, cors(corsOptions));
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+fs.mkdirSync(path.join(__dirname, "logs"), { recursive: true });
 const logStream = fs.createWriteStream(path.join(__dirname, 'logs', 'access.log'), { flags: 'a' });
 
 app.use(morgan("combine",{stream:logStream}));
@@ -116,6 +117,20 @@ app.use("/api/student",routerS);
 app.use("/api/events", eventRouter);
 app.use("/api/admin", adminRouter);
 
+const clientDist = path.join(__dirname, "../client/dist");
+
+if (fs.existsSync(clientDist)) {
+  app.use(express.static(clientDist));
+
+  app.use((req, res, next) => {
+    if (req.method === "GET" && !req.path.startsWith("/api")) {
+      return res.sendFile(path.join(clientDist, "index.html"));
+    }
+
+    return next();
+  });
+}
+
 // Return a useful client error when the request body is not valid JSON instead
 // of exposing the body-parser stack trace. Auth endpoints require a JSON object.
 app.use((error, req, res, next) => {
@@ -138,7 +153,7 @@ app.use((error, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 1800;
 
 app.listen(PORT, async () => {
   await connectDB();
