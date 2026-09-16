@@ -7,7 +7,6 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
-  const from = location.state?.from?.pathname || "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +28,8 @@ const Login = () => {
     try {
       setLoading(true);
       const response = await login(email.trim().toLowerCase(), password);
-      navigate("/dashboard", {
+      const destination = response?.data?.user?.role === "admin" ? "/admin" : "/dashboard";
+      navigate(destination, {
         replace: true,
         state: {
           successMessage: response.message || "Login successful. Welcome back!",

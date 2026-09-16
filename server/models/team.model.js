@@ -44,6 +44,10 @@ const teamSchema = new mongoose.Schema({
 
 teamSchema.pre("save", async function (next) {
     try {
+        if (!this.isNew) {
+            return next();
+        }
+
         const prevCount = await Count.findOne({ name: "teamCount" });
 
         if (prevCount) {
@@ -77,7 +81,7 @@ teamSchema.pre("save", async function (next) {
         next(); // Call next after processing
     } catch (error) {
         console.log(error);
-        next(error);
+
     }
 });
 

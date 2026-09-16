@@ -23,6 +23,8 @@ import Invitation from "./pages/user/Invitation.jsx";
 
 import Developer from "./components/Developer.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import AdminPanel from "./pages/admin/AdminPanel.jsx";
+import AdminRoute from "./components/AdminRoute.jsx";
 
 const App = () => {
   return (
@@ -118,8 +120,16 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminPanel />
+              </AdminRoute>
+            }
+          />
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>

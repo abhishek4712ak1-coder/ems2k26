@@ -10,10 +10,15 @@ const tabs = [
   { label: "Developer", path: "/developer" },
 ];
 
+const adminTabs = [
+  { label: "Command center", path: "/admin" },
+];
+
 const Navbar = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const isAdmin = user?.role === "admin";
 
   const handleLogout = async () => {
     try {
@@ -27,7 +32,7 @@ const Navbar = () => {
   return (
     <header className="navbar">
       <div className="navbar-inner">
-        <NavLink to="/dashboard" className="brand" onClick={() => setOpen(false)}>
+        <NavLink to={isAdmin ? "/admin" : "/dashboard"} className="brand" onClick={() => setOpen(false)}>
           <div className="brand-mark">Z</div>
           <div className="brand-copy">
             <strong>
@@ -45,8 +50,8 @@ const Navbar = () => {
           </div>
         </div>
 
-        <nav className="nav-tabs" aria-label="Main">
-          {tabs.map((tab) => (
+        <nav className="nav-tabs" aria-label={isAdmin ? "Admin" : "Main"}>
+          {(isAdmin ? adminTabs : tabs).map((tab) => (
             <NavLink
               key={tab.path}
               to={tab.path}
@@ -63,6 +68,11 @@ const Navbar = () => {
           Logout
         </button>
 
+        <div className="nav-account" aria-label="Signed in account">
+          <span className="nav-account-dot" />
+          <span>{user?.name || user?.email?.split("@")[0] || "Participant"}</span>
+        </div>
+
         <button
           className="menu-toggle"
           type="button"
@@ -76,7 +86,7 @@ const Navbar = () => {
 
       {open ? (
         <div className="mobile-menu">
-          {tabs.map((tab) => (
+          {(isAdmin ? adminTabs : tabs).map((tab) => (
             <NavLink
               key={tab.path}
               to={tab.path}

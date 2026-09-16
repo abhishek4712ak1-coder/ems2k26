@@ -8,7 +8,7 @@ export default defineConfig({
     server: {
         proxy: {
             '/api': {
-                target: 'https://bug-free-eureka-p7pjjqqjrj4gc6xxp-1800.app.github.dev',
+                target: process.env.VITE_PROXY_TARGET || 'http://localhost:1800',
                 changeOrigin: true,
             },
         },

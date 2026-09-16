@@ -16,9 +16,12 @@ import connectDB from "./config/db.js";
 import router from "./routes/auth.route.js";
 import routerS from "./routes/user.route.js";
 import eventRouter from "./routes/event.route.js";
+import adminRouter from "./routes/admin.route.js";
 
 
 const app = express();
+
+app.set("trust proxy", 1);
 
 
 
@@ -111,6 +114,7 @@ app.get("/health", (req, res) => {
 app.use("/api/auth",router)
 app.use("/api/student",routerS);
 app.use("/api/events", eventRouter);
+app.use("/api/admin", adminRouter);
 
 // Return a useful client error when the request body is not valid JSON instead
 // of exposing the body-parser stack trace. Auth endpoints require a JSON object.

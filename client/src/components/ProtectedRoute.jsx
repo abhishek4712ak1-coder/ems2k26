@@ -21,6 +21,10 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
+  if (user.role === "admin") {
+    return <Navigate to="/admin" replace />;
+  }
+
   return <AppLayout>{children}</AppLayout>;
 };
 

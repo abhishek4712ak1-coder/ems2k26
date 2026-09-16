@@ -12,6 +12,8 @@ const TEAM_BACKUP = teamBackup;
 const INDIVIDUAL = individualEvents;
 const STUDENT = Students;
 
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 
 export const getIndividualEvents = async(req,res) => {
   try {
@@ -93,47 +95,23 @@ async function maxEventsCanParticipated(email,iEvents){
 async function maxEventParticipationTeam(pid1) {
     try {
         const student = await Students.findOne({ pid: pid1 })
-        const email = student.email
-
-        const IndiEvents1 = await individualEvents.findOne({ email: email }, { events: 1 })
-        var Indivents = 0;
-        if (IndiEvents1) {
-            IndiEvents = IndiEvents1.events.length
+        if (!student) {
+            return false;
         }
 
-        console.log("Team Solo", IndiEvents1)
+        const individualParticipation = await individualEvents.findOne(
+            { email: student.email },
+            { events: 1 }
+        );
+        const individualCount = individualParticipation?.events?.length || 0;
+        const teamCount = await teamEvents.countDocuments({ actual_members: pid1 });
+        const participationLimit = student.college === "SRMSCET" ? 6 : 8;
 
-
-        const team = await teamEvents.countDocuments({ actual_members: pid1 })
-
-        console.log("Team Solo", soloEvents, team)
-
-
-        if (student.college === "SRMSCET") {
-
-            if (IndiEvents + team <= 6) {
-                return true
-            }
-            else {
-                //return response
-                return false
-            }
-
-        }
-
-        else {
-
-            if (soloEvents + team <= 8) {
-                return true
-            }
-            else {
-                //return response
-                return false
-            }
-        }
+        return individualCount + teamCount < participationLimit;
     }
     catch (error) {
-        console.log(error)
+        console.log(`error in maxEventParticipationTeam ${error}`)
+        return false;
     }
 }
 
@@ -141,7 +119,7 @@ async function getLastCount() {
 
     try {
 
-        const count1 = await Count.findOne({ name: "TeamCount" })
+        const count1 = await Count.findOne({ name: "teamCount" })
 
         if (count1) {
             const lastVal = count1.count;
@@ -258,29 +236,61 @@ export const saveTeam = async (req, res) => {
     try {
         const email = req.email;
         const { name, event, members } = req.body;
+        const teamNameValue = typeof name === "string" ? name.trim() : "";
+        const eventValue = typeof event === "string" ? event.trim() : "";
 
-        const teamName = await teamEvents.findOne({ name: name })
+        if (!teamNameValue || !eventValue || !Array.isArray(members) || members.length === 0) {
+            return res.status(400).json({ message: 'Team name, event, and at least one member are required' });
+        }
+
+        const creator = await Students.findOne({ email }).select("pid").lean();
+        if (!creator) {
+            return res.status(400).json({ message: 'Create your student profile before creating a team' });
+        }
+
+        const uniqueMembers = [...new Set(
+            members.map((member) => String(member || '').trim().toUpperCase()).filter(Boolean)
+        )];
+        if (!uniqueMembers.includes(creator.pid)) {
+            uniqueMembers.unshift(creator.pid);
+        }
+
+        const teamName = await teamEvents.findOne({ name: teamNameValue })
         if (teamName) {
             return res.status(400).json({ message: 'Team name already exists' });
         }
 
-        const event2 = await Events.findOne({ event: event });
-        const maxC = event2.limit
+        const event2 = await Events.findOne({
+            type: "Team",
+            event: {
+                $regex: `^${escapeRegex(eventValue)}$`,
+                $options: "i",
+            },
+        });
+        if (!event2) {
+            return res.status(404).json({ message: 'Selected team event was not found' });
+        }
 
-        if (members.length > maxC) {
+        const eventName = event2.event;
+        const maxC = Number(event2.limit);
+        if (!Number.isFinite(maxC) || maxC < 1) {
+            return res.status(400).json({ message: 'This event does not have a valid team limit' });
+        }
+
+        if (uniqueMembers.length > maxC) {
             return res.status(400).json({ message: 'Maximum team participation reached' });
         }
 
         const foundPids = []; // Array to store found pids
 
-        const promises = members.map(async (member) => {
+        const promises = uniqueMembers.map(async (member) => {
             const result = await teamEvents.findOne({
-                event: event,
+                event: eventName,
                 actual_members: { $in: [member] }  
             });
 
             
-            if (result && members.includes(member)) {
+            if (result) {
                 foundPids.push(member); 
             }
         });
@@ -289,8 +299,20 @@ export const saveTeam = async (req, res) => {
         await Promise.all(promises);
         const pidsString = foundPids.join(', ');
         if (foundPids.length > 0) {
-            return res.status(400).json({ message: `Pids ${pidsString} are already registered for ${event}` });
+            return res.status(400).json({ message: `Pids ${pidsString} are already registered for ${eventName}` });
 
+        }
+
+        const memberDetails = await Promise.all(
+            uniqueMembers.map(async (member) => {
+                const data = await fetchDetailsPid(member);
+                return data ? { pid: data.pid, email: data.email } : null;
+            })
+        );
+
+        const missingPid = uniqueMembers[memberDetails.findIndex((member) => !member)];
+        if (missingPid) {
+            return res.status(404).json({ message: `Participant ID ${missingPid} was not found` });
         }
 
         const lastCount = await getLastCount();
@@ -301,9 +323,10 @@ export const saveTeam = async (req, res) => {
         //save the data in the  team database 
         const team = new teamEvents({
             tid: tid,
-            name: name,
-            event: event,
-            temp_members: members,
+            name: teamNameValue,
+            event: eventName,
+            temp_members: uniqueMembers,
+            actual_members: [creator.pid],
             created_by: email
         })
 
@@ -314,12 +337,13 @@ export const saveTeam = async (req, res) => {
         const team_name = team.name;
         const event1 = team.event;
 
-        for (var i = 0; i < Object.keys(members).length; i++) {
-            const pid_data = await fetchDetailsPid(members[i]);
-            const email = pid_data.email;  //email of invitation user
-            const pid = pid_data.pid;
+        for (var i = 0; i < memberDetails.length; i++) {
+            const email = memberDetails[i].email;
+            const pid = memberDetails[i].pid;
 
-            const send_invi = await sendInvitation(email, pid, tid1, team_name, event1);
+            if (pid !== creator.pid) {
+                await sendInvitation(email, pid, tid1, team_name, event1);
+            }
         }
 
         res.status(201).json({ message: "Team Saved Successfully!" })
@@ -359,8 +383,8 @@ export const addVerifiedMember = async (req, res) => {
     try {
         //verifivcattion logic above
 
-        const tid = req.body.tid;
-        const pid = req.body.pid;
+        const tid = String(req.body.tid || '').trim();
+        const pid = String(req.body.pid || '').trim().toUpperCase();
 
         //find tid 
         const team = await teamEvents.findOne({ tid: tid })
@@ -368,24 +392,21 @@ export const addVerifiedMember = async (req, res) => {
             return res.status(404).json({ message: "Team Not Found!" });
         }
 
+        const invite = await INVITATION.findOne({ tid, pid, email: req.email });
+        if (!invite) {
+            return res.status(403).json({ message: "This invitation does not belong to the signed-in student." });
+        }
+
 
         //chk whether pid already exist in the actual members
 
-        const actualMember = await TEAM.findOne({
-            tid: tid,
-            actual_members: { $in: [pid] }
-        });
-        console.log(actualMember)
-
-        if (actualMember) {
-            //if the pid is already in the actual members array
-            return res.status(404).json({ message: "PID already in the team" });
-
+        if (!Array.isArray(team.actual_members)) {
+            team.actual_members = [];
         }
 
-        //add pid in the verified members 
-        // Assuming team has a verifiedMembers array
-        team.actual_members.push(pid);
+        if (!team.actual_members.includes(pid)) {
+            team.actual_members.push(pid);
+        }
 
         // Save the updated team object
         await team.save();

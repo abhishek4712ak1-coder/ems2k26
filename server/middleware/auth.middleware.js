@@ -32,3 +32,14 @@ export const requireAuth = (req, res, next) => {
     });
   }
 };
+
+export const requireAdmin = (req, res, next) => {
+  if (req.user?.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Administrator access is required.",
+    });
+  }
+
+  next();
+};

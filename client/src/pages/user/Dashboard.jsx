@@ -182,6 +182,14 @@ const Dashboard = () => {
               <strong>{counts.invites}</strong>
               <em>Waiting for you</em>
             </div>
+            <div className="glass pulse-card">
+              <div className="pulse-orbit"><span>✦</span></div>
+              <div>
+                <span>YOUR FEST PULSE</span>
+                <strong>{counts.individual + counts.teams} active choices</strong>
+                <em>Keep building your ZEST story</em>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="glass hero-card">
@@ -196,6 +204,33 @@ const Dashboard = () => {
             </p>
           </div>
         )}
+      </section>
+
+      <section className="fest-rail" aria-label="Festival shortcuts">
+        <Link className="fest-rail-item fest-rail-hot" to="/participation">
+          <span className="fest-rail-number">01</span>
+          <span>
+            <strong>Find your stage</strong>
+            <small>Browse events and make your pick</small>
+          </span>
+          <b aria-hidden="true">↗</b>
+        </Link>
+        <Link className="fest-rail-item fest-rail-cool" to="/invitation">
+          <span className="fest-rail-number">02</span>
+          <span>
+            <strong>Build your crew</strong>
+            <small>Check invitations from your team</small>
+          </span>
+          <b aria-hidden="true">↗</b>
+        </Link>
+        <Link className="fest-rail-item fest-rail-lime" to="/profile">
+          <span className="fest-rail-number">03</span>
+          <span>
+            <strong>Make it official</strong>
+            <small>Keep your participant profile ready</small>
+          </span>
+          <b aria-hidden="true">↗</b>
+        </Link>
       </section>
 
       {student ? (

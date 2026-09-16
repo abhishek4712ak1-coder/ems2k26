@@ -1,4 +1,4 @@
-const API_URL = "https://bug-free-eureka-p7pjjqqjrj4gc6xxp-1800.app.github.dev/api"
+const API_URL = import.meta.env.VITE_API_URL || "/api";
 const parseJsonSafe = async (response) => {
   try {
     return await response.json();
@@ -244,5 +244,22 @@ export const getTeamParticipation = async () => {
     { data: [] }
   );
 };
+
+export const getAdminOverview = () => apiRequest("/admin/overview");
+export const getAdminStudents = (search = "") =>
+  apiRequest(`/admin/students?search=${encodeURIComponent(search)}`);
+export const verifyAdminStudent = (id, verified) =>
+  apiRequest(`/admin/students/${id}/verify`, { method: "PATCH", body: JSON.stringify({ verified }) });
+export const getAdminEvents = () => apiRequest("/admin/events");
+export const createAdminEvent = (data) =>
+  apiRequest("/admin/events", { method: "POST", body: JSON.stringify(data) });
+export const updateAdminEvent = (id, data) =>
+  apiRequest(`/admin/events/${id}`, { method: "PUT", body: JSON.stringify(data) });
+export const deleteAdminEvent = (id) =>
+  apiRequest(`/admin/events/${id}`, { method: "DELETE" });
+export const getAdminParticipation = (type = "All", event = "") =>
+  apiRequest(`/admin/participation?type=${encodeURIComponent(type)}&event=${encodeURIComponent(event)}`);
+export const getAdminStudentReport = (value) =>
+  apiRequest(`/admin/students/report/${encodeURIComponent(value)}`);
 
 export default apiRequest;
