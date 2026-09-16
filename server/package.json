@@ -6,8 +6,12 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "install:all": "npm install --prefix ..",
+    "build": "npm install --prefix ..",
+    "build:all": "npm run build --prefix ..",
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "start:all": "npm run start:all --prefix ..",
     "admin:demo": "node scripts/create-demo-admin.js"
   },
   "repository": {
