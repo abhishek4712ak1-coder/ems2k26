@@ -8,7 +8,7 @@ export default defineConfig({
     server: {
         proxy: {
             '/api': {
-                target: process.env.VITE_PROXY_TARGET || 'http://localhost:1800',
+                target: process.env.VITE_PROXY_TARGET || 'http://localhost:1800' || "https://ems2k26.onrender.com/,
                 changeOrigin: true,
             },
         },
