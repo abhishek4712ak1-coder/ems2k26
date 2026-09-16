@@ -39,6 +39,7 @@ const allowedOrigins = new Set(
     "http://localhost:1800",
     "http://127.0.0.1:1800",
     process.env.CLIENT_ORIGIN,
+    "https://ems2k26.onrender.com/",
   ].filter(Boolean)
 );
 
