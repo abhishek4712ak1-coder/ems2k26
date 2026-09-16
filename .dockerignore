@@ -1,0 +1,11 @@
+.git
+.github
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+server/logs
+server/uploads
+client/README.md
+Dockerfile
+.dockerignore
